@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import LoginModal from "../LoginModal";
+import api from "@/function/axiosConfig";
 
 interface LoginContextType {
   openLogin: () => void;
@@ -15,6 +16,18 @@ const LoginContext = createContext<LoginContextType | undefined>(undefined);
 export function LoginProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    api.get("/api/user/me", { withCredentials: true }).then((res) => {
+      if (res.status === 200) {
+        setIsLoggedIn(true)
+      } else {
+        setIsLoggedIn(false)
+      }
+    }).catch((err) => {
+      setIsLoggedIn(false)
+    })
+  }, []);
 
   return (
     <LoginContext.Provider

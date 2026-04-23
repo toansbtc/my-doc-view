@@ -4,11 +4,12 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { useLogin } from './reactContext/LoginProvider';
 import { useTheme } from './reactContext/ThemeProvider';
+import api from '@/function/axiosConfig';
 
 export default function Navbar() {
   const [isDark, setIsDark] = useState(false);
   const { openLogin } = useLogin();
-  const { isLoggedIn } = useLogin();
+  const { isLoggedIn, setIsLoggedIn } = useLogin();
   const { setTheme } = useTheme()
 
   useEffect(() => {
@@ -26,13 +27,23 @@ export default function Navbar() {
 
   const toggleTheme = () => {
     if (isDark) {
-      setTheme("light")
+      setTheme("dark")
       setIsDark(false);
     } else {
-      setTheme("dark")
+      setTheme("light")
       setIsDark(true);
     }
   };
+
+  function logout() {
+    api.get("/api/user/logout", { withCredentials: true }).then((res) => {
+      if (res.status === 200) {
+        setIsLoggedIn(false)
+      }
+    }).catch((err) => {
+      console.log(err)
+    })
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors duration-300">
@@ -67,18 +78,48 @@ export default function Navbar() {
         <div className="flex items-center justify-end gap-3 w-1/4">
 
 
-          {isLoggedIn ? <span className="">Welcome admin</span> : <span className="">Guest</span>}
-          <button
-            onClick={openLogin}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-indigo-500 group relative shadow-sm"
-            aria-label="User Profile"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
-            <span className="absolute -bottom-8 bg-slate-800 dark:bg-slate-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none z-50">Sign In</span>
-          </button>
+          {isLoggedIn ? (
+            <>
+              <span className="">Welcome admin</span>
+              <button
+                onClick={logout}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-indigo-500 group relative shadow-sm"
+                aria-label="User Profile"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <path d="m16 17 5-5-5-5" />
+                  <path d="M21 12H9" />
+                </svg>
+                <span className="absolute -bottom-8 bg-slate-800 dark:bg-slate-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none z-50">Sign In</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <span className="">Guest</span>
+              <button
+                onClick={openLogin}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-800/40 hover:scale-105 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-indigo-500 group relative shadow-sm"
+                aria-label="User Profile"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span className="absolute -bottom-8 bg-slate-800 dark:bg-slate-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none z-50">Sign In</span>
+              </button>
+            </>
+          )}
+
           <button
             onClick={toggleTheme}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all outline-none focus:ring-2 focus:ring-indigo-500 group relative shadow-sm"

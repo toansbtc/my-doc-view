@@ -1,6 +1,10 @@
 "use client";
 
+import api from "@/function/axiosConfig";
+import { myUrl } from "@/function/myUrl";
+import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useLogin } from "./reactContext/LoginProvider";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,6 +13,7 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const [view, setView] = useState<"login" | "reset">("login");
+  const { setIsLoggedIn } = useLogin()
 
   useEffect(() => {
     if (isOpen) {
@@ -24,6 +29,23 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  async function handleLogin(e: any) {
+    e.preventDefault();
+    const data = new FormData(e.target);
+    const username = data.get("username") as string;
+    const password = data.get("password") as string;
+    const res = await api.post(`/api/user/login`, { userName: username, password: password });
+    console.log(res)
+    if (res.data === 'Login failed') {
+      alert("Invalid username or password")
+      setIsLoggedIn(false)
+    }
+    else {
+      setIsLoggedIn(true)
+      onClose()
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -67,18 +89,19 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <p className="text-white/70 mt-2 text-sm font-medium">Log in to enter your workspace.</p>
               </div>
 
-              <form className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
                   <input
-                    id="email"
-                    type="email"
-                    placeholder="Email address"
+                    name="username"
+                    type="text"
+                    placeholder="Username"
                     className="w-full px-5 py-3.5 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all backdrop-blur-md font-medium"
                   />
                 </div>
 
                 <div className="space-y-1">
                   <input
+                    name="password"
                     id="password"
                     type="password"
                     placeholder="Password"
@@ -96,7 +119,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 </div>
 
                 <button
-                  type="button"
+                  type="submit"
                   className="w-full py-3.5 px-4 bg-white text-slate-900 font-bold rounded-2xl shadow-lg hover:bg-slate-100 hover:scale-[1.02] transform transition-all active:scale-[0.98] mt-4 flex justify-center items-center gap-2"
                 >
                   Sign In

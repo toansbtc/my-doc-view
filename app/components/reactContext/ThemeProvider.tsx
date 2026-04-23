@@ -11,7 +11,7 @@ const themeContext = createContext<themeType | undefined>(undefined)
 export function ThemeProvider({ children }: {
     children: React.ReactNode
 }) {
-    const [theme, setTheme] = useState("light")
+    const [theme, setTheme] = useState("dark")
 
     // Automatically apply the Tailwind "dark" class without needing to inject strings into body
     useEffect(() => {
