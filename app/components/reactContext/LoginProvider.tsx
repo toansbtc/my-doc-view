@@ -18,7 +18,8 @@ export function LoginProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    api.get("/api/user/me", { withCredentials: true }).then((res) => {
+    api.get("/user/me", { withCredentials: true }).then((res) => {
+      console.log(res);
       if (res.status === 200) {
         setIsLoggedIn(true)
       } else {

@@ -35,7 +35,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     const data = new FormData(e.target);
     const username = data.get("username") as string;
     const password = data.get("password") as string;
-    const res = await api.post(`/api/user/login`, { userName: username, password: password });
+    const res = await api.post(`/user/login`, { userName: username, password: password });
     console.log(res)
     if (res.data === 'Login failed') {
       alert("Invalid username or password")

@@ -15,11 +15,11 @@ api.interceptors.response.use(
 
         if (!error.response) return Promise.reject(error);
 
-        if (url === "/api/user/login") return Promise.reject(error);
-        if (url === "/api/user/get-token") return Promise.reject(error);
+        if (url === "/user/login") return Promise.reject(error);
+        if (url === "/user/get-token") return Promise.reject(error);
 
         if (status === 401) {
-            await api.post("/api/user/get-token", {}, {
+            await api.post("/user/get-token", {}, {
                 withCredentials: true
             })
             console.log("fulfilled get new token")
