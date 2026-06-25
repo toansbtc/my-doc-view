@@ -15,7 +15,7 @@ interface contextCategory {
 const ContextCategory = createContext<contextCategory | null>(null);
 
 export function CategoryProvider({ children }: { children: React.ReactNode }) {
-    const [categoryData, setCategoryData] = useState<any>();
+    const [categoryData, setCategoryData] = useState<any | null>(null);
 
     return (
         <ContextCategory.Provider

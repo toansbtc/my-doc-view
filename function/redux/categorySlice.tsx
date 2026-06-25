@@ -112,13 +112,14 @@ const categorySlice = createSlice({
         },
 
         editCategory: (state, action) => {
+            console.log(action.payload);
             state.folder = state.folder.map(folder => {
                 if (folder.folderId === action.payload.folderId) {
                     folder.category = folder.category.map(category => {
-                        if (category.categoryId === action.payload.categoryId) {
+                        if (category.categoryId === action.payload.category.categoryId) {
                             return {
                                 ...category,
-                                ...action.payload
+                                ...action.payload.category
                             }
                         }
                         return category

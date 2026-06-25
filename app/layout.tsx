@@ -6,6 +6,7 @@ import { LoginProvider } from "./components/reactContext/LoginProvider";
 import { ThemeProvider } from "./components/reactContext/ThemeProvider";
 import { Providers } from "@/function/redux/provider";
 import { CategoryProvider } from "./components/reactContext/categoryProvider";
+import SearchProvider from "./components/reactContext/searchProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +38,9 @@ export default function RootLayout({
           <LoginProvider>
             <ThemeProvider>
               <CategoryProvider>
-                {children}
+                <SearchProvider>
+                  {children}
+                </SearchProvider>
               </CategoryProvider>
             </ThemeProvider>
           </LoginProvider>

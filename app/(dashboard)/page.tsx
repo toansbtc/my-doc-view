@@ -7,22 +7,24 @@ import { addNote, deleteNote, editNote } from "@/function/redux/categorySlice";
 import { useAppSelector } from "@/function/redux/hook";
 import { useLogin } from "../components/reactContext/LoginProvider";
 import { renderContent } from "../components/childrenComponent/renderContent";
+import { useSearch } from "../components/reactContext/searchProvider";
 
 
 export default function Home() {
 
   const [isAdding, setIsAdding] = useState(false);
 
-  const [notes, setNotes] = useState<any>([]);
-  const [searchNote, setSearchNote] = useState<any>(null);
+  const [notes, setNotes] = useState<any[]>([]);
+  // const [searchNote, setSearchNote] = useState<any>(null);
   const [isEditContent, setIsEditContent] = useState<boolean>(false);
-  const [content_to_edit, setContent_to_edit] = useState<{ id: number, keyWord: string, content: string, categoryId: number } | null>(null);
+  const [content_to_edit, setContent_to_edit] = useState<any>(null);
 
   const keyWord_ref = createRef<HTMLTextAreaElement>()
   const content_ref = createRef<HTMLTextAreaElement>()
 
   const { note } = useAppSelector((state) => state.category)
   const { isLoggedIn } = useLogin()
+  const { search } = useSearch()
 
   const {
     categoryData
@@ -37,24 +39,35 @@ export default function Home() {
   // }, [note])
 
   useEffect(() => {
-    console.log(note);
-    console.log(content_to_edit?.id);
+    // console.log(note);
+    // console.log(content_to_edit?.id);
 
-    if (searchNote) {
+    if (search) {
+      const arrayDataSearch = search.trim().split(" ")
       const filterNote = note?.filter((item: any) => {
-        if (item.keyWord.toLowerCase().includes(searchNote.toLowerCase()) || item.content.toLowerCase().includes(searchNote.toLowerCase())) {
+        if (arrayDataSearch.some((word: string) => item.keyWord.toLowerCase().includes(word.toLowerCase()) || item.content.toLowerCase().includes(word.toLowerCase()))) {
           return item
         }
       })
+      console.log("filterNote")
       setNotes(filterNote)
-    } else if (content_to_edit) {
-      const filterNote = note?.filter((item: any) => item.categoryId === content_to_edit.id)
-      setNotes(filterNote)
-      console.log(filterNote)
-    } else {
-      setNotes(note)
     }
-  }, [content_to_edit?.id, note, searchNote])
+    // else if (content_to_edit?.id) {
+    //   const filterNote = note?.filter((item: any) => item.categoryId === content_to_edit.id)
+    //   setNotes(filterNote)
+    //   // console.log(filterNote)
+    // }
+    else if (categoryData?.categoryId && categoryData.categoryId !== null) {
+      const filterNote = note?.filter((item: any) => item.categoryId === categoryData?.categoryId)
+      setNotes(filterNote)
+      console.log("filterCategory", categoryData?.categoryId)
+      // console.log(filterNote)
+    }
+    else {
+      setNotes(note)
+      console.log("noFilter")
+    }
+  }, [note, search, categoryData])
 
 
   async function addNewContent(e: any) {
@@ -218,14 +231,14 @@ export default function Home() {
                 </tr>
               )}
 
-              {note.length > 0 ? (
-                note.map((item, index) => (
+              {notes?.length > 0 ? (
+                notes?.map((item: any, index: any) => (
                   isEditContent && item.id == content_to_edit?.id ?
-                    <tr className="bg-white dark:bg-slate-900 ">
+                    <tr className="bg-white dark:bg-slate-900 " key={item.id || index}>
                       <td className="px-6 py-4 align-top">
                         <textarea
                           value={content_to_edit?.keyWord}
-                          onChange={(e) => setContent_to_edit({ ...content_to_edit, keyWord: e.target.value })}
+                          onChange={(e: any) => setContent_to_edit({ ...content_to_edit, keyWord: e.target.value })}
                           ref={keyWord_ref}
                           placeholder="Enter keyword..."
                           className=" w-full resize-none rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:placeholder:text-slate-500"

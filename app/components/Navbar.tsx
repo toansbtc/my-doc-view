@@ -7,12 +7,14 @@ import { useTheme } from './reactContext/ThemeProvider';
 import api from '@/function/axiosConfig';
 import { useAppDispatch } from '@/function/redux/hook';
 import { getDataCategory } from '@/function/redux/categorySlice';
+import { useSearch } from './reactContext/searchProvider';
 
 export default function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const [isDark, setIsDark] = useState(false);
   const { openLogin } = useLogin();
   const { isLoggedIn, setIsLoggedIn } = useLogin();
   const { setTheme } = useTheme()
+  const { setSearch } = useSearch()
 
 
   useEffect(() => {
@@ -47,6 +49,10 @@ export default function Navbar({ onToggleSidebar }: { onToggleSidebar: () => voi
     }).catch((err) => {
       console.log(err)
     })
+  }
+
+  function textSearch(text: string): void {
+    setSearch(text)
   }
 
   return (
@@ -109,6 +115,7 @@ export default function Navbar({ onToggleSidebar }: { onToggleSidebar: () => voi
             </div>
 
             <input
+              onChange={(e) => textSearch(e.target.value)}
               type="text"
               placeholder="Search documents, files, and more..."
               className="block w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-full bg-slate-50 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:focus:border-indigo-400 focus:bg-white dark:focus:bg-slate-900 transition-all outline-none placeholder-slate-400 dark:placeholder-slate-500 text-slate-700 dark:text-slate-200 shadow-inner"

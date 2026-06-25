@@ -1,17 +1,20 @@
 export const renderContent = (content: any) => {
-    return content.split("\n").map((line: any, index: any) => {
+    return content.split('--').map((line: any, index: any) => {
         const lowerLine = line.toLowerCase();
 
         if (lowerLine.startsWith("command:")) {
+            const command = line
+                .replace(/^command:\s*/i, "")
+                .replace(/^\s+/gm, "");
             return (
                 <div key={index} className="mb-2 flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-blue-700 dark:text-blue-400">
+                    {/* <span className="font-bold text-blue-700 dark:text-blue-400">
                         Command:
-                    </span>
+                    </span> */}
 
-                    <code className="rounded-md bg-slate-900 px-2 py-1 font-mono text-sm text-emerald-300 dark:bg-slate-800 dark:text-emerald-300">
-                        {line.replace(/^command:\s*/i, "")}
-                    </code>
+                    <pre className="rounded-md bg-slate-900 p-3 text-sm text-emerald-300 whitespace-pre-wrap">
+                        <code>{command}</code>
+                    </pre>
                 </div>
             );
         }

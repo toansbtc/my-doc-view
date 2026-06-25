@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import api from "@/function/axiosConfig";
 import { useAppDispatch } from "@/function/redux/hook";
-import { addCategory, deleteCategory, editCategory } from "@/function/redux/categorySlice";
+import { addCategory, deleteCategory, editCategory, deleteFolder, editFolder } from "@/function/redux/categorySlice";
 import { useLogin } from "../reactContext/LoginProvider";
 import { useTheme } from "../reactContext/ThemeProvider";
 import { useCategory } from "../reactContext/categoryProvider";
@@ -39,7 +39,8 @@ const TreeNode = ({
     const [isOpen, setIsOpen] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [newName, setNewName] = useState("");
-    const [editName, setEditName] = useState<string | null>(null);
+    const [editNameCategory, setEditNameCategory] = useState<{ ID: string, name: string } | null>(null);
+    const [editNameFolder, setEditNameFolder] = useState<{ ID: string, name: string } | null>(null);
 
     const inputRef = React.useRef<HTMLInputElement>(null);
     const dispatch = useAppDispatch();
@@ -94,11 +95,17 @@ const TreeNode = ({
     const actionButtonGroupClass =
         "opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center gap-0.5 transition-opacity";
 
-    const deleteFolder = async (folderId: number) => {
+    const deleteFolder1 = async (folderId: number, folderName: string) => {
         try {
-            const response = await api.delete(`/folder/${folderId}`);
+            const confirmDelete = confirm(`Are you sure you want to delete folder ${folderName} ?`);
+            if (!confirmDelete) {
+                return;
+            }
+            const response = await api.post(`/category/deleteFolder`, {
+                folderId: folderId
+            });
             if (response.status === 200) {
-
+                dispatch(deleteFolder({ folderId }));
             }
         } catch (error) {
             console.log(error);
@@ -106,13 +113,18 @@ const TreeNode = ({
     }
 
     async function renameCategory(categoryId: any): Promise<void> {
+        if (!editNameCategory?.name.trim()) {
+            setEditNameCategory(null);
+            return;
+        };
         try {
-            const response = await api.put(`/category/${categoryId}`, { categoryName: editName });
+            const response = await api.put(`/category/editName`, { categoryId: categoryId, categoryName: editNameCategory.name });
             if (response.status === 200) {
                 dispatch(editCategory({
                     folderId: node.folderId,
                     category: response.data,
                 }));
+                setEditNameCategory(null);
             }
         } catch (error) {
             console.log(error);
@@ -125,7 +137,11 @@ const TreeNode = ({
             if (!confirmDelete) {
                 return;
             }
-            const response = await api.delete(`/category/${categoryId}`);
+            const response = await api.delete(`/category/delete`, {
+                data: {
+                    categoryId: categoryId
+                }
+            });
             if (response.status === 200) {
                 dispatch(deleteCategory({
                     folderId: node.folderId,
@@ -167,9 +183,29 @@ const TreeNode = ({
                     </span>
                 </div>
 
-                <span className="text-[13px] font-medium tracking-tight truncate select-none flex-1">
-                    {node.folderName}
-                </span>
+
+                {editNameFolder?.ID === node.folderId.toString() ?
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={editNameFolder?.name || ""}
+                        onChange={e => setEditNameFolder({ ID: node.folderId.toString(), name: node.folderName })}
+                        onKeyDown={e => {
+                            if (e.key === "Enter")
+                                renameCategory(node.folderId);
+
+                            if (e.key === "Escape") {
+                                setEditNameCategory(null);
+                            }
+                        }}
+                        onBlur={handleAddSubmit}
+                        className="w-full min-w-0 truncate bg-transparent outline-none bg-transparent border-none outline-none text-[13px] font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                        placeholder="Category name..."
+                    />
+                    :
+                    <span className="text-[13px] font-medium tracking-tight truncate select-none flex-1">
+                        {node.folderName}
+                    </span>}
 
                 {isLoggedIn && <div className={actionButtonGroupClass}>
                     <button
@@ -180,7 +216,7 @@ const TreeNode = ({
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><line x1="12" y1="10" x2="12" y2="16" /><line x1="9" y1="13" x2="15" y2="13" /></svg>
                     </button>
                     <button
-                        onClick={() => { }}
+                        onClick={() => setEditNameFolder({ ID: node.folderId.toString(), name: node.folderName })}
                         className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
                         title="Rename Folder"
                     >
@@ -201,7 +237,7 @@ const TreeNode = ({
 
                     </button>
                     <button
-                        onClick={() => deleteFolder(node.folderId)}
+                        onClick={() => deleteFolder1(node.folderId, node.folderName)}
                         className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
                         title="Delete Folder"
                     >
@@ -256,65 +292,132 @@ const TreeNode = ({
                                     </svg>
                                 </span>
 
-                                <span className="text-[13px] font-medium tracking-tight truncate select-none flex-1">
-                                    {category.categoryName}
-                                </span>
+                                {
+                                    editNameCategory?.ID === category.categoryId ?
+                                        <input
+                                            ref={inputRef}
+                                            type="text"
+                                            value={editNameCategory?.name || ""}
+                                            onChange={e => setEditNameCategory({ ID: category.categoryId, name: e.target.value })}
+                                            onKeyDown={e => {
+                                                if (e.key === "Enter")
+                                                    renameCategory(category.categoryId);
 
-                                {isLoggedIn &&
-                                    <div className={actionButtonGroupClass}>
-                                        {/* <button
+                                                if (e.key === "Escape") {
+                                                    setEditNameCategory(null);
+                                                }
+                                            }}
+                                            onBlur={handleAddSubmit}
+                                            className="w-full min-w-0 truncate bg-transparent outline-none bg-transparent border-none outline-none text-[13px] font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                                            placeholder="Category name..."
+                                        />
+                                        :
+                                        <span className="text-[13px] font-medium tracking-tight truncate select-none flex-1">
+                                            {category.categoryName}
+                                        </span>
+                                }
+
+                                {isLoggedIn && (
+                                    editNameCategory?.ID !== category.categoryId ?
+                                        <div className={actionButtonGroupClass}>
+                                            {/* <button
                                             onClick={createNewCategory}
                                             className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
                                             title="New Category"
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><line x1="12" y1="10" x2="12" y2="16" /><line x1="9" y1="13" x2="15" y2="13" /></svg>
                                         </button> */}
-                                        <button
-                                            onClick={() => renameCategory(category.categoryId)}
-                                            className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                                            title="Rename Category"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
+                                            <button
+                                                onClick={() => setEditNameCategory({ ID: category.categoryId, name: category.categoryName })}
+                                                className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                                                title="Rename Category"
                                             >
-                                                <path d="M12 20h9" />
-                                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                                            </svg>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M12 20h9" />
+                                                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                                </svg>
 
-                                        </button>
-                                        <button
-                                            onClick={() => deleteCategory1(category.categoryId, category.categoryName)}
-                                            className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                                            title="Delete Category"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
+                                            </button>
+                                            <button
+                                                onClick={() => deleteCategory1(category.categoryId, category.categoryName)}
+                                                className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                                                title="Delete Category"
                                             >
-                                                <path d="M3 6h18" />
-                                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                                <path d="M10 11v6" />
-                                                <path d="M14 11v6" />
-                                            </svg>
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="14"
+                                                    height="14"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M3 6h18" />
+                                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                    <path d="M10 11v6" />
+                                                    <path d="M14 11v6" />
+                                                </svg>
 
-                                        </button>
-                                    </div>}
+                                            </button>
+                                        </div>
+                                        :
+                                        <div className="flex items-center gap-2 ">
+                                            <button
+                                                onClick={() => renameCategory(category.categoryId)}
+                                                className=" w-5 h-5 bg-yellow-400 dark:bg-yellow-800 rounded-2xl flex items-center justify-center"
+                                                title="ok"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M8 12.5l2.5 2.5L16 9" />
+                                                </svg>
+
+                                            </button>
+                                            <button
+                                                onClick={() => setEditNameCategory(null)}
+                                                className=" w-5 h-5 bg-red-400 dark:bg-red-800 rounded-2xl flex items-center justify-center"
+                                                title="cancel"
+                                            >
+                                                <svg
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M18 6 6 18" />
+                                                    <path d="m6 6 12 12" />
+                                                </svg>
+
+                                            </button>
+                                        </div>
+                                )}
                             </div>
                         ))}
 
