@@ -1,0 +1,13 @@
+# *
+User-agent: *
+Allow: /
+
+# Googlebot
+User-agent: Googlebot
+Allow: /
+
+# Host
+Host: https://my-doc-view.vercel.app
+
+# Sitemaps
+Sitemap: https://my-doc-view.vercel.app/sitemap.xml
