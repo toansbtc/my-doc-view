@@ -101,11 +101,32 @@ const TreeNode = ({
             if (!confirmDelete) {
                 return;
             }
-            const response = await api.post(`/category/deleteFolder`, {
+            const response = await api.post(`/folder/deleteFolder`, {
                 folderId: folderId
             });
-            if (response.status === 200) {
+            if (response.status === 201) {
+                console.log("delete folder success", response.data);
                 dispatch(deleteFolder({ folderId }));
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    async function renameFolder(folderId: any): Promise<void> {
+        try {
+
+            const response = await api.post(`/folder/updateFolder`, {
+                folderId: folderId,
+                folderName: editNameFolder?.name,
+            });
+            if (response.status === 201) {
+                console.log("update folder success", response.data);
+                dispatch(editFolder({
+                    folderId: node.folderId,
+                    folderName: response.data.folderName,
+                }));
+                setEditNameFolder(null);
             }
         } catch (error) {
             console.log(error);
@@ -158,17 +179,17 @@ const TreeNode = ({
             <div
                 className="flex items-center group cursor-pointer py-1.5 px-3 mx-2 my-0.5 rounded-md transition-all duration-200 ease-out hover:bg-indigo-50/60 dark:hover:bg-indigo-900/30 text-slate-700 dark:text-slate-300"
                 style={{ paddingLeft: `${Math.max(0, level * 12 + 8)}px` }}
-                onClick={() => setIsOpen(prev => !prev)}
+
                 tabIndex={0}
                 role="button"
-                onKeyDown={e => {
-                    if (e.key === "Enter" || e.key === " ") {
-                        setIsOpen(prev => !prev);
-                        e.preventDefault();
-                    }
-                }}
+            // onKeyDown={e => {
+            //     if (e.key === "Enter") {
+            //         setIsOpen(prev => !prev);
+            //         e.preventDefault();
+            //     }
+            // }}
             >
-                <div className="w-5 h-5 flex items-center justify-center mr-1 shrink-0">
+                <div className="w-5 h-5 flex items-center justify-center mr-1 shrink-0" onClick={() => setIsOpen(prev => !prev)}>
                     <span
                         className={`text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-90 text-indigo-500" : ""
                             }`}
@@ -177,7 +198,7 @@ const TreeNode = ({
                     </span>
                 </div>
 
-                <div className="shrink-0 mr-2">
+                <div className="shrink-0 mr-2" onClick={() => setIsOpen(prev => !prev)}>
                     <span className={isOpen ? "text-indigo-500" : "text-slate-400"}>
                         {isOpen ? "📂" : "📁"}
                     </span>
@@ -186,81 +207,127 @@ const TreeNode = ({
 
                 {editNameFolder?.ID === node.folderId.toString() ?
                     <input
-                        ref={inputRef}
                         type="text"
                         value={editNameFolder?.name || ""}
-                        onChange={e => setEditNameFolder({ ID: node.folderId.toString(), name: node.folderName })}
+                        onChange={e => setEditNameFolder({ ID: node.folderId.toString(), name: e.target.value })}
                         onKeyDown={e => {
                             if (e.key === "Enter")
-                                renameCategory(node.folderId);
+                                renameFolder(node.folderId);
 
                             if (e.key === "Escape") {
-                                setEditNameCategory(null);
+                                setEditNameFolder(null);
                             }
                         }}
                         onBlur={handleAddSubmit}
-                        className="w-full min-w-0 truncate bg-transparent outline-none bg-transparent border-none outline-none text-[13px] font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                        className="border boder-radius w-full min-w-0 truncate bg-transparent  outline-none outline-none text-[13px] font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
                         placeholder="Category name..."
                     />
                     :
-                    <span className="text-[13px] font-medium tracking-tight truncate select-none flex-1">
+                    <span className="text-[13px] font-medium tracking-tight truncate select-none flex-1" onClick={() => setIsOpen(prev => !prev)}>
                         {node.folderName}
                     </span>}
 
-                {isLoggedIn && <div className={actionButtonGroupClass}>
-                    <button
-                        onClick={createNewCategory}
-                        className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                        title="New Category"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><line x1="12" y1="10" x2="12" y2="16" /><line x1="9" y1="13" x2="15" y2="13" /></svg>
-                    </button>
-                    <button
-                        onClick={() => setEditNameFolder({ ID: node.folderId.toString(), name: node.folderName })}
-                        className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                        title="Rename Folder"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                {isLoggedIn &&
+                    editNameFolder?.ID !== node.folderId.toString() ?
+                    (<div className={actionButtonGroupClass}>
+                        <button
+                            onClick={createNewCategory}
+                            className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                            title="New Category"
                         >
-                            <path d="M12 20h9" />
-                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                        </svg>
-
-                    </button>
-                    <button
-                        onClick={() => deleteFolder1(node.folderId, node.folderName)}
-                        className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                        title="Delete Folder"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" /><line x1="12" y1="10" x2="12" y2="16" /><line x1="9" y1="13" x2="15" y2="13" /></svg>
+                        </button>
+                        <button
+                            onClick={() => setEditNameFolder({ ID: node.folderId.toString(), name: node.folderName })}
+                            className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                            title="Rename Folder"
                         >
-                            <path d="M3 6h18" />
-                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                            <path d="M10 11v6" />
-                            <path d="M14 11v6" />
-                        </svg>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                            </svg>
 
-                    </button>
-                </div>}
+                        </button>
+                        <button
+                            onClick={() => deleteFolder1(node.folderId, node.folderName)}
+                            className="flex items-center justify-center w-5 h-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                            title="Delete Folder"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M3 6h18" />
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                <path d="M10 11v6" />
+                                <path d="M14 11v6" />
+                            </svg>
+
+                        </button>
+                    </div>)
+                    :
+                    <div className="flex items-center gap-2 ">
+                        <button
+                            onClick={() => renameFolder(node.folderId.toString())}
+                            className=" w-5 h-5 bg-yellow-400 dark:bg-yellow-800 rounded-2xl flex items-center justify-center"
+                            title="ok"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M8 12.5l2.5 2.5L16 9" />
+                            </svg>
+
+                        </button>
+                        <button
+                            onClick={() => setEditNameFolder(null)}
+                            className=" w-5 h-5 bg-red-400 dark:bg-red-800 rounded-2xl flex items-center justify-center"
+                            title="cancel"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="20"
+                                height="20"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <path d="M18 6 6 18" />
+                                <path d="m6 6 12 12" />
+                            </svg>
+
+                        </button>
+                    </div>
+                }
             </div>
 
             <div
@@ -308,7 +375,7 @@ const TreeNode = ({
                                                 }
                                             }}
                                             onBlur={handleAddSubmit}
-                                            className="w-full min-w-0 truncate bg-transparent outline-none bg-transparent border-none outline-none text-[13px] font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
+                                            className="border boder-radius w-full min-w-0 truncate bg-transparent  outline-none outline-none text-[13px] font-medium text-slate-700 dark:text-slate-300 placeholder:text-slate-400"
                                             placeholder="Category name..."
                                         />
                                         :
