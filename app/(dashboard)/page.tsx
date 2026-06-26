@@ -408,7 +408,7 @@ export default function Home() {
         {/* Table Footer */}
         <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between">
           <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Showing <span className="font-bold text-slate-700 dark:text-slate-300">{note.length}</span> entries
+            Showing <span className="font-bold text-slate-700 dark:text-slate-300">{notes.length}</span> entries
           </p>
         </div>
       </div>
