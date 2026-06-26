@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "My doc App",
+  title: "My Doc App",
   description: "Henry Document - A developer note app for saving frequently used commands, code snippets, and programming notes. Quickly organize, search, and reuse useful code and terminal commands ",
   authors: [{ name: "Henry" }],
   keywords: [
@@ -39,9 +39,6 @@ export const metadata = {
   ],
   verification: {
     google: "UW4J-kQQBb602E_9JfDidS8PetnyXwOWRDf53IAthKs",
-    other: {
-      "msvalidate.01": "8E1AB6F98268E86C0A54AE6334F56E92"
-    }
   }
 }
 
